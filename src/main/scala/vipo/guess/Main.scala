@@ -9,7 +9,7 @@ object Main extends App {
   implicit val system = ActorSystem()
 
   // the handler actor replies to incoming HttpRequests
-  val handler = system.actorOf(Props[GuessService], name = "handler")
+  val handler = system.actorOf(Props[Router], name = "handler")
 
   IO(Http) ! Http.Bind(handler, interface = "localhost", port = 8080)
 }
