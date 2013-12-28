@@ -1,15 +1,11 @@
 package vipo.guess
 
-import akka.actor.{ActorSystem, Props}
 import akka.io.IO
 import spray.can.Http
+import Bootstrap._
 
 object Main extends App {
 
-  implicit val system = ActorSystem()
+  IO(Http) ! Http.Bind(router, interface = "localhost", port = 8080)
 
-  // the handler actor replies to incoming HttpRequests
-  val handler = system.actorOf(Props[Router], name = "handler")
-
-  IO(Http) ! Http.Bind(handler, interface = "localhost", port = 8080)
 }
