@@ -7,6 +7,7 @@ import spray.httpx.marshalling.ToResponseMarshallable.isMarshallable
 import spray.routing.Directive.pimpApply
 import spray.routing.directives.DetachMagnet.fromUnit
 import vipo.guess.domain.Language
+import vipo.guess.domain.Operator
 
 object RouterActor {
   val Lang = "lang"
@@ -26,15 +27,13 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       } ~
       pathPrefix(Lang) {
         path(IntNumber) { int =>
-          complete(if (int % 2 == 0) "even ball" else "odd ball")
+          complete(langNo(int))
         } ~
         path(List) {
           complete(list)
         } ~
         pathEnd {
-          detach(){
-            complete(lang)
-          }
+          complete(lang)
         }
       }
     }
@@ -67,7 +66,20 @@ class RouterActor extends HttpServiceActor with ActorLogging {
         </ul>
       </body>
     </html>
-          
+
+  def langNo(no: Int) = {
+    val t = Language.AllLanguages(no)
+    <html>
+      <body>
+        <h1>Language</h1>
+        <h2>Operators:</h2>
+        <ul>
+          <li>{Text(t._1.fullDescription)}</li>
+          <li>{Text(t._2.fullDescription)}</li>
+        </ul>
+      </body>
+    </html>
+  }
           
   val lang =
     <html>

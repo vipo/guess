@@ -2,16 +2,17 @@ package vipo.guess.domain
 
 import scala.collection.immutable.ListMap
 
-sealed abstract class Operator(val view: String, val prio: Int) {
+sealed abstract class Operator(val name: String, val view: String, val prio: Int) {
   override def toString(): String = view
+  def fullDescription: String = s"${view} (${name})"
 }
-case object Plus extends Operator("+", 1)
-case object Minus extends Operator("-", 1)
-case object Mul extends Operator("*", 2)
-case object Div extends Operator("/", 2)
-case object Mod extends Operator("%", 2)
-case object ShiftLeft extends Operator("<<", 3)
-case object ShiftRight extends Operator(">>", 3)
+case object Plus extends Operator("Addition", "+", 1)
+case object Minus extends Operator("Subtraction", "-", 1)
+case object Mul extends Operator("Multiplication", "*", 2)
+case object Div extends Operator("Division", "/", 2)
+case object Mod extends Operator("Remainder of division", "%", 2)
+case object ShiftLeft extends Operator("Shift left", "<<", 3)
+case object ShiftRight extends Operator("Shift right", ">>", 3)
 
 object Language {
 
