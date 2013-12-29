@@ -12,9 +12,11 @@ import vipo.guess.domain.Operator
 object RouterActor {
   val Lang = "lang"
   val List = "list"
+  val Gen = "gen"
   val LangListPath = s"/${Lang}/${List}"
   val LangPath = s"/${Lang}"
   val LangNoPath = {no: Int => s"/${Lang}/${no}"}
+  val LangNoGenPath = {no: Int => s"${LangNoPath(no)}/${Gen}"}
 }
 
 class RouterActor extends HttpServiceActor with ActorLogging {
@@ -26,8 +28,13 @@ class RouterActor extends HttpServiceActor with ActorLogging {
         complete(index)
       } ~
       pathPrefix(Lang) {
-        path(IntNumber) { int =>
-          complete(langNo(int))
+        pathPrefix(IntNumber) { int =>
+          path(Gen){
+            complete(index)
+          } ~
+          pathEnd {
+            complete(langNo(int))
+          }
         } ~
         path(List) {
           complete(list)
@@ -77,6 +84,11 @@ class RouterActor extends HttpServiceActor with ActorLogging {
           <li>{Text(t._1.fullDescription)}</li>
           <li>{Text(t._2.fullDescription)}</li>
         </ul>
+        {<a>Here</a> % Attribute(None, "href", Text(LangNoGenPath(no)), Null)} you can find sample
+          data to test your implementation with. It is generated
+          on every request, so press F5 as often as you like.
+          Page is machine semi-friendly: function text, empty line,
+          space-separated arguments and values (pair per line).
       </body>
     </html>
   }
