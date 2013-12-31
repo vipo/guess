@@ -17,6 +17,10 @@ case object ShiftRight extends Operator("Shift right", ">>", 3)
 object Language {
 
   val Operators: List[Operator] = List(Plus, Minus, Mul, Div, Mod, ShiftLeft, ShiftRight)
+  val MinValue: Int = -500
+  val MaxValue: Int = 500
+  val ConstMinValue: Int = 1
+  val ConstMaxValue: Int = 10
   
   // grouping operators by priority to have operators with different priorities in language
   private val prioToOp: Map[Int,List[Operator]] = Operators.groupBy(_.prio)  
