@@ -1,13 +1,19 @@
 package vipo.guess.actors
 
-import akka.actor._
-import spray.routing._
 import scala.xml._
+import akka.actor._
+import akka.pattern.ask
+import akka.util.Timeout
 import spray.httpx.marshalling.ToResponseMarshallable.isMarshallable
+import spray.routing._
 import spray.routing.Directive.pimpApply
 import spray.routing.directives.DetachMagnet.fromUnit
+import vipo.guess.Bootstrap.stats
 import vipo.guess.domain.Language
 import vipo.guess.domain.Operator
+import scala.concurrent.duration._
+import scala.concurrent.Promise
+import scala.concurrent.Future
 
 object RouterActor {
   val Lang = "lang"
@@ -21,6 +27,8 @@ object RouterActor {
 
 class RouterActor extends HttpServiceActor with ActorLogging {
   import RouterActor._
+  
+  implicit val timeout = Timeout(5 seconds)
 
   def receive = runRoute {
     get {
@@ -30,7 +38,9 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       pathPrefix(Lang) {
         pathPrefix(IntNumber) { int =>
           path(Gen){
-            complete(index)
+            detach(){
+              complete(generate(int))
+            }
           } ~
           pathEnd {
             complete(langNo(int))
@@ -59,6 +69,8 @@ class RouterActor extends HttpServiceActor with ActorLogging {
         </ul>
       </body>
     </html>
+          
+ def generate(no: Int): String = "LOL"
 
   val list = 
     <html>
@@ -88,7 +100,8 @@ class RouterActor extends HttpServiceActor with ActorLogging {
           data to test your implementation with. It is generated
           on every request, so press F5 as often as you like.
           Page is machine semi-friendly: function text, empty line,
-          space-separated arguments and values (pair per line).
+          space-separated arguments and values (pair per line), empty line,
+          some metadata.
       </body>
     </html>
   }
