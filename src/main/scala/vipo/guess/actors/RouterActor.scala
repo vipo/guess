@@ -101,6 +101,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
         <h3>Requirements:</h3>
         <ul>
           <li>It is anonymous function with type "Int => Int"</li>
+          <li>Types are not defined</li>
           <li>It starts with &#123; and ends with &#125;</li>
           <li>It is written in on line</li>
           <li>Argument's values must be in range [{Language.MinValue}; {Language.MaxValue}]</li>
@@ -109,12 +110,12 @@ class RouterActor extends HttpServiceActor with ActorLogging {
           <li>All the low-level integer overflows work as they do it in Scala</li>
           <li>Only 2 arithmetic operators (as in Scala) allowed on Ints are listed in your personal task,
             see {<a>this</a> % Attribute(None, "href", Text(LangListPath), Null)} for details</li>
+          <li>Both of operators must be used</li>
           <li>There are no brackets in expressions</li>
-          <li>One Int constant can be used from range [{Language.ConstMinValue}; {Language.ConstMaxValue}]</li>
-          <li>Any constant can be used or function's argument can refered (together) only for 4 times in total, that means there can be 4 operands</li>
-          <li>There can be any quantity of operators in the function</li>
-          <li>If division by zero appears such function is illegal</li>
-          <li>Any operator can be used as many times as needed, it is indirectly limiteded by a number of operands</li>
+          <li>At least one Int constant must be used from range [{Language.ConstMinValue}; {Language.ConstMaxValue}]</li>
+          <li>Function's argument must be used at least once</li>
+          <li>There must be 3 operands in a function</li>
+          <li>Function is considered to illegal if division by zero is possible</li>
           <li>Word "return" is forbidden</li>
         </ul>
       </body>
