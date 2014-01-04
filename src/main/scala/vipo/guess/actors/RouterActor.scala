@@ -61,10 +61,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       </body>
     </html>
           
- def generate(no: Int): String = {
-   stats ! SampleGenerated(no)
-   "LOL"
- }
+  def generate(no: Int): String = { stats ! SampleGenerated(no); "LOL" }
 
   val list =
     <html>
