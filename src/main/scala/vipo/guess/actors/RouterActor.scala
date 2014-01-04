@@ -3,15 +3,10 @@ package vipo.guess.actors
 import scala.xml._
 import akka.actor._
 import akka.pattern.ask
-import akka.util.Timeout
-import spray.httpx.marshalling.ToResponseMarshallable.isMarshallable
 import spray.routing._
-import spray.routing.Directive.pimpApply
-import spray.routing.directives.DetachMagnet.fromUnit
-import vipo.guess.Bootstrap.stats
+import vipo.guess.Bootstrap.{stats, executionContext, defaultTimeout}
 import vipo.guess.domain.Language
 import vipo.guess.domain.Operator
-import scala.concurrent.duration._
 import scala.concurrent.Promise
 import scala.concurrent.Future
 
@@ -27,8 +22,6 @@ object RouterActor {
 
 class RouterActor extends HttpServiceActor with ActorLogging {
   import RouterActor._
-  
-  implicit val timeout = Timeout(5 seconds)
 
   def receive = runRoute {
     get {
@@ -38,12 +31,10 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       pathPrefix(Lang) {
         pathPrefix(IntNumber) { int =>
           path(Gen){
-            detach(){
-              complete(generate(int))
-            }
+            complete(generate(int))
           } ~
-          pathEnd {
-            complete(langNo(int))
+          pathEnd { ctx =>
+            langNo(ctx, int)
           }
         } ~
         path(List) {
@@ -70,9 +61,12 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       </body>
     </html>
           
- def generate(no: Int): String = "LOL"
+ def generate(no: Int): String = {
+   stats ! SampleGenerated(no)
+   "LOL"
+ }
 
-  val list = 
+  val list =
     <html>
       <body>
         <h1>List of available languages:</h1>
@@ -86,24 +80,29 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       </body>
     </html>
 
-  def langNo(no: Int) = {
-    val t = Language.AllLanguages(no)
-    <html>
-      <body>
-        <h1>Language</h1>
-        <h2>Operators:</h2>
-        <ul>
-          <li>{Text(t._1.fullDescription)}</li>
-          <li>{Text(t._2.fullDescription)}</li>
-        </ul>
-        {<a>Here</a> % Attribute(None, "href", Text(LangNoGenPath(no)), Null)} you can find sample
-          data to test your implementation with. It is generated
-          on every request, so press F5 as often as you like.
-          Page is machine semi-friendly: function text, empty line,
-          space-separated arguments and values (pair per line), empty line,
-          some metadata.
-      </body>
-    </html>
+  def langNo(ctx: RequestContext, no: Int) = {
+    def reply(times: Long) = {
+      val t = Language.AllLanguages(no)
+      <html>
+        <body>
+          <h1>Language</h1>
+          <h2>Operators:</h2>
+          <ul>
+            <li>{Text(t._1.fullDescription)}</li>
+            <li>{Text(t._2.fullDescription)}</li>
+          </ul>
+          {<a>Here</a> % Attribute(None, "href", Text(LangNoGenPath(no)), Null)} you can find sample
+            data to test your implementation with. It is generated
+            on every request, so press F5 as often as you like.
+            Page is machine semi-friendly: function text, empty line,
+            space-separated arguments and values (pair per line).
+            The page was generated {times} times.
+        </body>
+      </html>
+    }
+    (stats ? GetSampleGeneratedTimes(no)).mapTo[Long].onSuccess {
+      case l: Long => ctx.complete(reply(l))
+    }
   }
           
   val lang =

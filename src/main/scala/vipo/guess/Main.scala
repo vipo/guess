@@ -2,7 +2,7 @@ package vipo.guess
 
 import akka.io.IO
 import spray.can.Http
-import Bootstrap._
+import Bootstrap.{system, router}
 
 object Main extends App {
 
