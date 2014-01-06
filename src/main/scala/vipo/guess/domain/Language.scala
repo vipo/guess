@@ -12,7 +12,7 @@ case class Value extends Operand
 abstract class Operator(val name: String, val view: String, val prio: Int, op: (Int, Int) => Int) extends Token {
   override def toString(): String = view
   def fullDescription: String = s"${view} (${name})"
-  def evaluate(a: Int, b: Int) = op(a, b)
+  def apply(a: Int, b: Int) = op(a, b)
 }
 case object Plus extends Operator("Addition", "+", 1, (a: Int, b: Int) => a + b)
 case object Minus extends Operator("Subtraction", "-", 1, (a: Int, b: Int) => a - b)
