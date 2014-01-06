@@ -1,18 +1,26 @@
 package vipo.guess.domain
 
 import scala.collection.immutable.ListMap
+import scala.collection.immutable.Map
 
-sealed abstract class Operator(val name: String, val view: String, val prio: Int) {
+sealed trait Token
+
+abstract class Operand extends Token
+case class Constant(val value: Int) extends Operand
+case class Value extends Operand
+
+abstract class Operator(val name: String, val view: String, val prio: Int, op: (Int, Int) => Int) extends Token {
   override def toString(): String = view
   def fullDescription: String = s"${view} (${name})"
+  def evaluate(a: Int, b: Int) = op(a, b)
 }
-case object Plus extends Operator("Addition", "+", 1)
-case object Minus extends Operator("Subtraction", "-", 1)
-case object Mul extends Operator("Multiplication", "*", 2)
-case object Div extends Operator("Division", "/", 2)
-case object Mod extends Operator("Remainder of division", "%", 2)
-case object ShiftLeft extends Operator("Shift left", "<<", 3)
-case object ShiftRight extends Operator("Shift right", ">>", 3)
+case object Plus extends Operator("Addition", "+", 1, (a: Int, b: Int) => a + b)
+case object Minus extends Operator("Subtraction", "-", 1, (a: Int, b: Int) => a - b)
+case object Mul extends Operator("Multiplication", "*", 2, (a: Int, b: Int) => a * b)
+case object Div extends Operator("Division", "/", 2, (a: Int, b: Int) => a / b)
+case object Mod extends Operator("Remainder of division", "%", 2, (a: Int, b: Int) => a % b)
+case object ShiftLeft extends Operator("Shift left", "<<", 3, (a: Int, b: Int) => a << b)
+case object ShiftRight extends Operator("Shift right", ">>", 3, (a: Int, b: Int) => a >> b)
 
 object Language {
 
