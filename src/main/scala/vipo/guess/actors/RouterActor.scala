@@ -61,7 +61,11 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       </body>
     </html>
           
-  def generate(no: Int): String = { stats ! SampleGenerated(no); "LOL" }
+  def generate(no: Int): String = {
+    stats ! SampleGenerated(no);
+    val (f, values) = Language.randomFunction(no)
+    s"val f =\n  ${f}\n${values.map(t => s"f(${t._1})==${t._2}").mkString("\n")}"
+  }
 
   val list =
     <html>
@@ -91,9 +95,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
           {<a>Here</a> % Attribute(None, "href", Text(LangNoGenPath(no)), Null)} you can find sample
             data to test your implementation with. It is generated
             on every request, so press F5 as often as you like.
-            Page is machine semi-friendly: function text, empty line,
-            space-separated arguments and values (pair per line).
-            The page was generated {times} times.
+            Page is machine semi-friendly, it was generated {times} times.
         </body>
       </html>
     }
@@ -111,7 +113,6 @@ class RouterActor extends HttpServiceActor with ActorLogging {
         <ul>
           <li>It is anonymous function with type "Int => Int"</li>
           <li>Types are not defined</li>
-          <li>It starts with &#123; and ends with &#125;</li>
           <li>It is written in on line</li>
           <li>Argument's values must be in range [{Language.MinValue}; {Language.MaxValue}]</li>
           <li>Function's result must be in range [Int.MinValue; Int.MaxValue]</li>
