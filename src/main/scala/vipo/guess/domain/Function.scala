@@ -9,9 +9,12 @@ class Function(val argName: String,
         case Constant(c) => c
         case Argument() => arg
       }
-      def apply(exp: (Operand, Operator, Operand)): Option[Constant] =
-        if (value(exp._3) == 0 && (exp._2 == Div || exp._2 == Mod)) None
-        else Some(Constant(exp._2(value(exp._1), value(exp._3))))
+      def apply(exp: (Operand, Operator, Operand)): Option[Constant] = {
+        val v1 = value(exp._1)
+        val v2 = value(exp._3)
+        if (!exp._2.validate(v1, v2)) None
+        else Some(Constant(exp._2(v1, v2)))
+      }
     }
     exp match {
       case (v1, o1, v2, o2, v3) if o1.prio >= o2.prio => for {

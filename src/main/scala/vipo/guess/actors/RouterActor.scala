@@ -126,6 +126,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
           <li>Function's argument must be used at least once</li>
           <li>There must be 3 operands in a function</li>
           <li>Division by zero is undefined</li>
+          <li>Any Right-shift or left-shift by negative value is undefined</li>
           <li>Word "return" is forbidden</li>
         </ul>
       </body>

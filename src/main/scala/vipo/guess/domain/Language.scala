@@ -13,19 +13,21 @@ case class Constant(val value: Int) extends Operand {
 }
 case class Argument() extends Operand
 
-abstract class Operator(val name: String, val view: String, val prio: Int, op: (Int, Int) => Int) extends Token {
+abstract class Operator(val name: String, val view: String, val prio: Int,
+    op: (Int, Int) => Int, validation: (Int, Int) => Boolean) extends Token {
   override def toString(): String = view
   def fullDescription: String = s"${view} (${name})"
   def apply(a: Int, b: Int) = op(a, b)
+  def validate = validation
 }
-case object Plus extends Operator("Addition", "+", 1, (a: Int, b: Int) => a + b)
-case object Minus extends Operator("Subtraction", "-", 1, (a: Int, b: Int) => a - b)
-case object Mul extends Operator("Multiplication", "*", 2, (a: Int, b: Int) => a * b)
-case object Div extends Operator("Division", "/", 2, (a: Int, b: Int) => a / b)
-case object Mod extends Operator("Remainder of division", "%", 2, (a: Int, b: Int) => a % b)
-case object LeftShift extends Operator("Left-shift", "<<", 0, (a: Int, b: Int) => a << b)
-case object ARightShift extends Operator("Arithmetic right-shift", ">>", 0, (a: Int, b: Int) => a >> b)
-case object URightShift extends Operator("Unsigned right-shift", ">>>", 0, (a: Int, b: Int) => a >>> b)
+case object Plus extends Operator("Addition", "+", 1, (a: Int, b: Int) => a + b, (_, _) => true)
+case object Minus extends Operator("Subtraction", "-", 1, (a: Int, b: Int) => a - b, (_, _) => true)
+case object Mul extends Operator("Multiplication", "*", 2, (a: Int, b: Int) => a * b, (_, _) => true)
+case object Div extends Operator("Division", "/", 2, (a: Int, b: Int) => a / b, (_, b: Int) => b != 0)
+case object Mod extends Operator("Remainder of division", "%", 2, (a: Int, b: Int) => a % b, (_, b: Int) => b != 0)
+case object LeftShift extends Operator("Left-shift", "<<", 0, (a: Int, b: Int) => a << b, (_, b: Int) => b >= 0)
+case object ARightShift extends Operator("Arithmetic right-shift", ">>", 0, (a: Int, b: Int) => a >> b, (_, b: Int) => b >= 0)
+case object URightShift extends Operator("Unsigned right-shift", ">>>", 0, (a: Int, b: Int) => a >>> b, (_, b: Int) => b >= 0)
 
 object Language {
   
