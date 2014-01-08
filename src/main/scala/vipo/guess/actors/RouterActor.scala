@@ -64,7 +64,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
   def generate(no: Int): String = {
     stats ! SampleGenerated(no);
     val (f, values) = Language.randomFunction(no)
-    s"val f =\n  ${f}\n${values.map(t => s"f(${t._1})==${t._2}").mkString("\n")}"
+    s"val f =\n  ${f}\n${values.map(t => s"f(${t._1}) == ${t._2}").mkString("\n")}"
   }
 
   val list =
@@ -125,7 +125,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
           <li>At least one Int constant must be used from range [{Language.ConstMinValue}; {Language.ConstMaxValue}]</li>
           <li>Function's argument must be used at least once</li>
           <li>There must be 3 operands in a function</li>
-          <li>Function is considered to illegal if division by zero is possible</li>
+          <li>Division by zero is undefined</li>
           <li>Word "return" is forbidden</li>
         </ul>
       </body>

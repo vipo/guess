@@ -18,16 +18,16 @@ class LanguageSpec extends FlatSpec with Matchers {
         4 -> (Minus, Mul),
         5 -> (Minus, Div),
         6 -> (Minus, Mod),
-        7 -> (Plus, ShiftLeft),
-        8 -> (Plus, ShiftRight),
-        9 -> (Minus, ShiftLeft),
-        10 -> (Minus, ShiftRight),
-        11 -> (Mul, ShiftLeft),
-        12 -> (Mul, ShiftRight),
-        13 -> (Div, ShiftLeft),
-        14 -> (Div, ShiftRight),
-        15 -> (Mod, ShiftLeft),
-        16 -> (Mod, ShiftRight)
+        7 -> (Plus, LeftShift),
+        8 -> (Plus, ARightShift),
+        9 -> (Minus, LeftShift),
+        10 -> (Minus, ARightShift),
+        11 -> (Mul, LeftShift),
+        12 -> (Mul, ARightShift),
+        13 -> (Div, LeftShift),
+        14 -> (Div, ARightShift),
+        15 -> (Mod, LeftShift),
+        16 -> (Mod, ARightShift)
       )
     )
   }

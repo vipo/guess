@@ -23,12 +23,13 @@ case object Minus extends Operator("Subtraction", "-", 1, (a: Int, b: Int) => a 
 case object Mul extends Operator("Multiplication", "*", 2, (a: Int, b: Int) => a * b)
 case object Div extends Operator("Division", "/", 2, (a: Int, b: Int) => a / b)
 case object Mod extends Operator("Remainder of division", "%", 2, (a: Int, b: Int) => a % b)
-case object ShiftLeft extends Operator("Shift left", "<<", 3, (a: Int, b: Int) => a << b)
-case object ShiftRight extends Operator("Shift right", ">>", 3, (a: Int, b: Int) => a >> b)
+case object LeftShift extends Operator("Left-shift", "<<", 0, (a: Int, b: Int) => a << b)
+case object ARightShift extends Operator("Arithmetic right-shift", ">>", 0, (a: Int, b: Int) => a >> b)
+case object URightShift extends Operator("Unsigned right-shift", ">>>", 0, (a: Int, b: Int) => a >>> b)
 
 object Language {
   
-  val Operators: List[Operator] = List(Plus, Minus, Mul, Div, Mod, ShiftLeft, ShiftRight)
+  val Operators: List[Operator] = List(Plus, Minus, Mul, Div, Mod, LeftShift, ARightShift, URightShift)
   val MinValue: Int = -100
   val MaxValue: Int = 100
   val ConstMinValue: Int = 1
@@ -61,7 +62,13 @@ object Language {
     val confsPermutations = confs.permutations.toList
     val conf = confsPermutations(random.nextInt(confsPermutations.size))
     val f = new Function(argName.toString, (conf(0), ops._1, conf(1), ops._2, conf(2)))
-    (f, arguments.map(v => (v, f(v))).toList)
+    val values = arguments.
+      map(v => (v, f(v))).
+      flatMap({
+        case (a, Some(v)) => List((a, v))
+        case _ => List()
+      }).toList
+    (f, values)
   }
 
 }
