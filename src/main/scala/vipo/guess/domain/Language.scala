@@ -31,7 +31,6 @@ case object URightShift extends Operator("Unsigned right-shift", ">>>", 0, (a: I
 
 object Language {
   
-  val Operators: List[Operator] = List(Plus, Minus, Mul, Div, Mod, LeftShift, ARightShift, URightShift)
   val MinValue: Int = -100
   val MaxValue: Int = 100
   val ConstMinValue: Int = 1
@@ -39,12 +38,14 @@ object Language {
   
   private val arguments = (MinValue to MaxValue).toList
   private val random = new Random(System.currentTimeMillis)
-  // grouping operators by priority to have operators with different priorities in language
-  private val prioToOp: Map[Int,List[Operator]] = Operators.groupBy(_.prio)  
+  private val opGroups: Map[Int,List[Operator]] = Map(
+    1 -> List(Plus, Minus, Mul),  //safe operations
+    2 -> List(Div, Mod, LeftShift, ARightShift, URightShift) //these might make function undefined 
+  )  
   private val pairs: Iterator[(Operator, Operator)] = for {
-      comb <- prioToOp.keys.toList.sorted.combinations(2)
-      a <- prioToOp(comb(0))
-      b <- prioToOp(comb(1))
+      comb <- opGroups.keys.toList.sorted.combinations(2)
+      a <- opGroups(comb(0))
+      b <- opGroups(comb(1))
     } yield(a,b)
   
   val AllLanguages: Map[Int, (Operator, Operator)] = ListMap.empty ++ pairs
