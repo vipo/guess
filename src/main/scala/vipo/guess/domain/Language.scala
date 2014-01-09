@@ -39,9 +39,10 @@ object Language {
   private val arguments = (MinValue to MaxValue).toList
   private val random = new Random(System.currentTimeMillis)
   private val opGroups: Map[Int,List[Operator]] = Map(
-    1 -> List(Plus, Minus, Mul),  //safe operations
-    2 -> List(Div, Mod, LeftShift, ARightShift, URightShift) //these might make function undefined 
-  )  
+    1 -> List(Plus, Minus),  //safe operations
+    2 -> List(Div, Mod), //these might make function undefined
+    3 -> List(LeftShift, ARightShift, URightShift) //... and these
+  )
   private val pairs: Iterator[(Operator, Operator)] = for {
       comb <- opGroups.keys.toList.sorted.combinations(2)
       a <- opGroups(comb(0))

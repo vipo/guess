@@ -12,22 +12,22 @@ class LanguageSpec extends FlatSpec with Matchers {
     val map = Language.AllLanguages
     map should be (
       ListMap(
-        1 -> (Plus, Mul),
-        2 -> (Plus, Div),
-        3 -> (Plus, Mod),
-        4 -> (Minus, Mul),
-        5 -> (Minus, Div),
-        6 -> (Minus, Mod),
-        7 -> (Plus, LeftShift),
-        8 -> (Plus, ARightShift),
-        9 -> (Minus, LeftShift),
-        10 -> (Minus, ARightShift),
-        11 -> (Mul, LeftShift),
-        12 -> (Mul, ARightShift),
-        13 -> (Div, LeftShift),
-        14 -> (Div, ARightShift),
-        15 -> (Mod, LeftShift),
-        16 -> (Mod, ARightShift)
+        1 -> (Plus, Div),
+        2 -> (Plus, Mod),
+        3 -> (Minus, Div),
+        4 -> (Minus, Mod),
+        5 -> (Plus, LeftShift),
+        6 -> (Plus, ARightShift),
+        7 -> (Plus, URightShift),
+        8 -> (Minus, LeftShift),
+        9 -> (Minus, ARightShift),
+        10 -> (Minus, URightShift),
+        11 -> (Div, LeftShift),
+        12 -> (Div, ARightShift),
+        13 -> (Div, URightShift),
+        14 -> (Mod, LeftShift),
+        15 -> (Mod, ARightShift),
+        16 -> (Mod, URightShift)
       )
     )
   }
