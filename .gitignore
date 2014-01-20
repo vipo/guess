@@ -5,3 +5,5 @@
 /.classpath
 /.cache
 /.worksheet
+/snapshots/
+/journal/
