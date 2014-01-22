@@ -30,6 +30,8 @@ case object ARightShift extends Operator("Arithmetic right-shift", ">>", 0, (a: 
 case object URightShift extends Operator("Unsigned right-shift", ">>>", 0, (a: Int, b: Int) => a >>> b, (_, b: Int) => b >= 0)
 
 object Language {
+
+  type LangNo = Int
   
   val MinValue: Int = -100
   val MaxValue: Int = 100

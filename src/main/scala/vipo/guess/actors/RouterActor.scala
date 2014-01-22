@@ -5,7 +5,7 @@ import akka.actor._
 import akka.pattern.ask
 import spray.routing._
 import vipo.guess.Bootstrap.{stats, executionContext, defaultTimeout}
-import vipo.guess.domain.Language
+import vipo.guess.domain.Language._
 import vipo.guess.domain.Operator
 import scala.concurrent.Promise
 import scala.concurrent.Future
@@ -16,8 +16,8 @@ object RouterActor {
   val Gen = "gen"
   val LangListPath = s"/${Lang}/${List}"
   val LangPath = s"/${Lang}"
-  val LangNoPath = {no: Int => s"/${Lang}/${no}"}
-  val LangNoGenPath = {no: Int => s"${LangNoPath(no)}/${Gen}"}
+  val LangNoPath = {no: LangNo => s"/${Lang}/${no}"}
+  val LangNoGenPath = {no: LangNo => s"${LangNoPath(no)}/${Gen}"}
 }
 
 class RouterActor extends HttpServiceActor with ActorLogging {
@@ -29,12 +29,12 @@ class RouterActor extends HttpServiceActor with ActorLogging {
         complete(index)
       } ~
       pathPrefix(Lang) {
-        pathPrefix(IntNumber) { int =>
+        pathPrefix(IntNumber) { no =>
           path(Gen){
-            complete(generate(int))
+            complete(generate(no))
           } ~
           pathEnd { ctx =>
-            langNo(ctx, int)
+            langNo(ctx, no)
           }
         } ~
         path(List) {
@@ -61,9 +61,9 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       </body>
     </html>
           
-  def generate(no: Int): String = {
+  def generate(no: LangNo): String = {
     stats ! SampleGenerated(no);
-    val (f, values) = Language.randomFunction(no)
+    val (f, values) = randomFunction(no)
     s"val f =\n  ${f}\n${values.map(t => s"f(${t._1}) == ${t._2}").mkString("\n")}"
   }
 
@@ -72,7 +72,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       <body>
         <h1>List of available languages:</h1>
         <ul>
-          {Language.AllLanguages.map { case (k,_) =>
+          {AllLanguages.map { case (k,_) =>
             <li>
               {<a>Language {k}</a> % Attribute(None, "href", Text(LangNoPath(k)), Null)}
             </li>
@@ -81,9 +81,9 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       </body>
     </html>
 
-  def langNo(ctx: RequestContext, no: Int) = {
+  def langNo(ctx: RequestContext, no: LangNo) = {
     def reply(times: Long) = {
-      val t = Language.AllLanguages(no)
+      val t = AllLanguages(no)
       <html>
         <body>
           <h1>Language</h1>
@@ -114,7 +114,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
           <li>It is anonymous function with type "Int => Int"</li>
           <li>Types are not defined</li>
           <li>It is written in on line</li>
-          <li>Argument's values must be in range [{Language.MinValue}; {Language.MaxValue}]</li>
+          <li>Argument's values must be in range [{MinValue}; {MaxValue}]</li>
           <li>Function's result must be in range [Int.MinValue; Int.MaxValue]</li>
           <li>The only type it is aware of is Int</li>
           <li>All the low-level integer overflows work as they do it in Scala</li>
@@ -122,7 +122,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
             see {<a>this</a> % Attribute(None, "href", Text(LangListPath), Null)} for details</li>
           <li>Both of operators must be used</li>
           <li>There are no brackets in expressions</li>
-          <li>At least one Int constant must be used from range [{Language.ConstMinValue}; {Language.ConstMaxValue}]</li>
+          <li>At least one Int constant must be used from range [{ConstMinValue}; {ConstMaxValue}]</li>
           <li>Function's argument must be used at least once</li>
           <li>There must be 3 operands in a function</li>
           <li>Division by zero is undefined</li>
