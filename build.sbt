@@ -12,14 +12,15 @@ mainClass := Some("vipo.guess.Main")
 
 resolvers ++= Seq(
   "Typesafe repo" at "http://repo.typesafe.com/typesafe/releases/",
-  "Spray repo" at "http://repo.spray.io"
+  "Spray repo" at "http://repo.spray.io",
+  "Sonatype Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
 )
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
   "com.typesafe.akka" %% "akka-persistence-experimental" % akkaVersion,
-  "org.reactivemongo" %% "reactivemongo" % "0.10.0",
+  "org.reactivemongo" %% "reactivemongo" % "0.11.0-SNAPSHOT",
   "io.spray" % "spray-can" % sprayVersion,
   "io.spray" % "spray-routing" % sprayVersion,
   "ch.qos.logback" % "logback-classic" % "1.0.13",
