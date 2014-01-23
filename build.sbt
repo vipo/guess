@@ -19,7 +19,6 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
   "com.typesafe.akka" %% "akka-persistence-experimental" % akkaVersion,
-  "org.reactivemongo" %% "reactivemongo" % "0.10.0",
   "io.spray" % "spray-can" % sprayVersion,
   "io.spray" % "spray-routing" % sprayVersion,
   "ch.qos.logback" % "logback-classic" % "1.0.13",
