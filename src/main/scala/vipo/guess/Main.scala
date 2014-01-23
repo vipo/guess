@@ -6,6 +6,6 @@ import Bootstrap.{system, router}
 
 object Main extends App {
 
-  IO(Http) ! Http.Bind(router, interface = "localhost", port = 8080)
+  IO(Http) ! Http.Bind(router, interface = "localhost", port = 8888)
 
 }
