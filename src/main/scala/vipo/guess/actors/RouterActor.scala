@@ -4,7 +4,7 @@ import scala.xml._
 import akka.actor._
 import akka.pattern.ask
 import spray.routing._
-import vipo.guess.Bootstrap.{stats, executionContext, defaultTimeout}
+import vipo.guess.Bootstrap.{Stats, ExecutionContext, DefaultTimeout}
 import vipo.guess.domain.Language._
 import vipo.guess.domain.Operator
 import scala.concurrent.Promise
@@ -62,7 +62,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
     </html>
           
   def generate(no: LangNo): String = {
-    stats ! SampleGenerated(no);
+    Stats ! SampleGenerated(no);
     val (f, values) = randomFunction(no)
     s"val f =\n  ${f}\n${values.map(t => s"f(${t._1}) == ${t._2}").mkString("\n")}"
   }
@@ -99,7 +99,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
         </body>
       </html>
     }
-    (stats ? GetSampleGeneratedTimes(no)).mapTo[Long].onSuccess {
+    (Stats ? GetSampleGeneratedTimes(no)).mapTo[Long].onSuccess {
       case l: Long => ctx.complete(reply(l))
     }
   }

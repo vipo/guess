@@ -9,6 +9,7 @@ import akka.persistence.SaveSnapshotFailure
 import akka.persistence.SaveSnapshotSuccess
 import vipo.guess.domain.Language._
 import vipo.guess.domain.Challenge._
+import vipo.guess.Bootstrap.{SnapshotDuration, SnapshotDurationInitial}
 import scala.concurrent.duration._
 import scala.concurrent.duration.Duration
 
@@ -18,8 +19,6 @@ case class GetSampleGeneratedTimes(val langNo: LangNo)
 object StatisticsActor {
   type SampleGenData = Map[LangNo, Long]
   type ChallengeData = Map[ChallengeId, Long]
-  val SnapshotDuration = 10 hours
-  val SnapshotDurationInitial = 10 seconds
 }
 
 @SerialVersionUID(42L)
@@ -30,7 +29,7 @@ case class SnapshotData(
 class StatisticsActor extends Processor with ActorLogging {
   import StatisticsActor._
   
-  private val snapMessage = "snap"
+  private val SnapMessage = "snap"
   private var langGenerated: SampleGenData = Map().withDefaultValue(0)
   private var challengesTried: ChallengeData = Map().withDefaultValue(0)
 
@@ -47,7 +46,7 @@ class StatisticsActor extends Processor with ActorLogging {
     case SnapshotOffer(metadata, SnapshotData(g, c)) =>
       try {langGenerated = g; challengesTried = c}
       finally log.info(s"Recovered from snapshot: $metadata")
-    case s if s == snapMessage =>
+    case SnapMessage =>
       saveSnapshot(SnapshotData(langGenerated, challengesTried))
     case SaveSnapshotSuccess(metadata) =>
       try scheduleSnapshot()
@@ -59,6 +58,6 @@ class StatisticsActor extends Processor with ActorLogging {
 
   private def scheduleSnapshot(d: FiniteDuration = SnapshotDuration) = {
     import vipo.guess.Bootstrap._
-    system.scheduler.scheduleOnce(d, self, snapMessage)
+    System.scheduler.scheduleOnce(d, self, SnapMessage)
   }
 }
