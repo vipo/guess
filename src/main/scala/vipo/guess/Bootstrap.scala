@@ -11,7 +11,7 @@ import scala.collection.JavaConversions._
 object Bootstrap {
   
   implicit val DefaultTimeout = Timeout(2 seconds)
-  
+    
   implicit val System = ActorSystem()
   
   implicit val ExecutionContext = System.dispatcher
@@ -19,6 +19,8 @@ object Bootstrap {
   val SnapshotDuration = 20 hours
 
   val SnapshotDurationInitial = 4 minutes
+  
+  val Passwords = System.settings.config.getStringList("passwords")
   
   val Router = System.actorOf(Props[RouterActor], name = "router")
   
