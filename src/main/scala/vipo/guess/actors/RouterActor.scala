@@ -4,7 +4,7 @@ import scala.xml._
 import akka.actor._
 import akka.pattern.ask
 import spray.routing._
-import vipo.guess.Bootstrap.{Stats, ExecutionContext, DefaultTimeout}
+import vipo.guess.Bootstrap.{Passwords, Stats, ExecutionContext, DefaultTimeout}
 import vipo.guess.domain.Language._
 import vipo.guess.domain.Operator
 import scala.concurrent.Promise
@@ -14,10 +14,11 @@ object RouterActor {
   val Lang = "lang"
   val List = "list"
   val Gen = "gen"
+  val Pass = "pass"
   val LangListPath = s"/${Lang}/${List}"
   val LangPath = s"/${Lang}"
   val LangNoPath = {no: LangNo => s"/${Lang}/${no}"}
-  val LangNoGenPath = {no: LangNo => s"${LangNoPath(no)}/${Gen}"}
+  val LangNoGenPath = {no: LangNo => s"${LangNoPath(no)}/${Gen}?${Pass}=replace_me_with_your_password"}
 }
 
 class RouterActor extends HttpServiceActor with ActorLogging {
@@ -31,7 +32,10 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       pathPrefix(Lang) {
         pathPrefix(IntNumber) { no =>
           path(Gen){
-            complete(generate(no))
+            parameter(Pass) { pass =>
+              if (pass == Passwords(no)) complete(generate(no))
+              else reject()
+            }
           } ~
           pathEnd { ctx =>
             langNo(ctx, no)
@@ -93,8 +97,8 @@ class RouterActor extends HttpServiceActor with ActorLogging {
             <li>{Text(t._2.fullDescription)}</li>
           </ul>
           {<a>Here</a> % Attribute(None, "href", Text(LangNoGenPath(no)), Null)} you can find sample
-            data to test your implementation with. It is generated
-            on every request, so press F5 as often as you like.
+            data to test your implementation with. Note, that you have to provide a password
+            in the url. Data is generated on every request, so press F5 as often as you like.
             Page is machine semi-friendly, it was generated {times} times.
         </body>
       </html>
