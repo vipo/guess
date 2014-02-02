@@ -20,7 +20,7 @@ object Bootstrap {
 
   val SnapshotDurationInitial = 4 minutes
   
-  val Passwords: List[String] = System.settings.config.getStringList("passwords").toList
+  val Tokens: List[String] = System.settings.config.getStringList("tokens").toList
   
   val Router = System.actorOf(Props[RouterActor], name = "router")
   

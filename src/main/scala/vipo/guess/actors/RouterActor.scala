@@ -4,7 +4,7 @@ import scala.xml._
 import akka.actor._
 import akka.pattern.ask
 import spray.routing._
-import vipo.guess.Bootstrap.{Passwords, Stats, ExecutionContext, DefaultTimeout}
+import vipo.guess.Bootstrap.{Tokens, Stats, ExecutionContext, DefaultTimeout}
 import vipo.guess.domain.Language._
 import vipo.guess.domain.Operator
 import scala.concurrent.Promise
@@ -14,11 +14,11 @@ object RouterActor {
   val Lang = "lang"
   val List = "list"
   val Gen = "gen"
-  val Pass = "pass"
+  val Token = "token"
   val LangListPath = s"/${Lang}/${List}"
   val LangPath = s"/${Lang}"
   val LangNoPath = {no: LangNo => s"/${Lang}/${no}"}
-  val LangNoGenPath = {no: LangNo => s"${LangNoPath(no)}/${Gen}?${Pass}=replace_me_with_your_password"}
+  val LangNoGenPath = {no: LangNo => s"${LangNoPath(no)}/${Gen}?${Token}=replace_me_with_your_token"}
 }
 
 class RouterActor extends HttpServiceActor with ActorLogging {
@@ -32,8 +32,8 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       pathPrefix(Lang) {
         pathPrefix(IntNumber) { no =>
           path(Gen){
-            parameter(Pass) { pass =>
-              if (pass == Passwords(no)) complete(generate(no))
+            parameter(Token) { token =>
+              if (token == Tokens(no)) complete(generate(no))
               else reject()
             }
           } ~
