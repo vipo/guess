@@ -97,7 +97,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
             <li>{Text(t._2.fullDescription)}</li>
           </ul>
           {<a>Here</a> % Attribute(None, "href", Text(LangNoGenPath(no)), Null)} you can find sample
-            data to test your implementation with. Note, that you have to provide a password
+            data to test your implementation with. Note, that you have to provide a token
             in the url. Data is generated on every request, so press F5 as often as you like.
             Page is machine semi-friendly, it was generated {times} times.
         </body>
