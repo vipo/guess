@@ -13,21 +13,21 @@ case class Constant(val value: Int) extends Operand {
 }
 case class Argument() extends Operand
 
-abstract class Operator(val name: String, val view: String, val prio: Int,
+abstract class Operator(val name: String, val view: String, val prio: Int, val safe: Boolean,
     op: (Int, Int) => Int, validation: (Int, Int) => Boolean) extends Token {
   override def toString(): String = view
   def fullDescription: String = s"${view} (${name})"
   def apply(a: Int, b: Int) = op(a, b)
   def validate = validation
 }
-case object Plus extends Operator("Addition", "+", 1, (a: Int, b: Int) => a + b, (_, _) => true)
-case object Minus extends Operator("Subtraction", "-", 1, (a: Int, b: Int) => a - b, (_, _) => true)
-case object Mul extends Operator("Multiplication", "*", 2, (a: Int, b: Int) => a * b, (_, _) => true)
-case object Div extends Operator("Division", "/", 2, (a: Int, b: Int) => a / b, (_, b: Int) => b != 0)
-case object Mod extends Operator("Remainder of division", "%", 2, (a: Int, b: Int) => a % b, (_, b: Int) => b != 0)
-case object LeftShift extends Operator("Left-shift", "<<", 0, (a: Int, b: Int) => a << b, (_, b: Int) => b >= 0)
-case object ARightShift extends Operator("Arithmetic right-shift", ">>", 0, (a: Int, b: Int) => a >> b, (_, b: Int) => b >= 0)
-case object URightShift extends Operator("Unsigned right-shift", ">>>", 0, (a: Int, b: Int) => a >>> b, (_, b: Int) => b >= 0)
+case object Plus extends Operator("Addition", "+", 1, true, (a: Int, b: Int) => a + b, (_, _) => true)
+case object Minus extends Operator("Subtraction", "-", 1, true, (a: Int, b: Int) => a - b, (_, _) => true)
+case object Mul extends Operator("Multiplication", "*", 2, true, (a: Int, b: Int) => a * b, (_, _) => true)
+case object Div extends Operator("Division", "/", 2, false, (a: Int, b: Int) => a / b, (_, b: Int) => b != 0)
+case object Mod extends Operator("Remainder of division", "%", 2, false, (a: Int, b: Int) => a % b, (_, b: Int) => b != 0)
+case object LeftShift extends Operator("Left-shift", "<<", 0, false, (a: Int, b: Int) => a << b, (_, b: Int) => b >= 0)
+case object ARightShift extends Operator("Arithmetic right-shift", ">>", 0, false, (a: Int, b: Int) => a >> b, (_, b: Int) => b >= 0)
+case object URightShift extends Operator("Unsigned right-shift", ">>>", 0, false, (a: Int, b: Int) => a >>> b, (_, b: Int) => b >= 0)
 
 object Language {
 
@@ -38,19 +38,18 @@ object Language {
   val ConstMinValue: Int = 1
   val ConstMaxValue: Int = 10
   
+  val OperatorList: List[Operator] = Plus :: Minus :: Mul :: Div :: Mod ::
+	  	LeftShift :: ARightShift :: URightShift :: Nil
+  
   private val arguments = (MinValue to MaxValue).toList
   private val random = new Random(System.currentTimeMillis)
-  private val opGroups: Map[Int,List[Operator]] = Map(
-    1 -> List(Plus, Minus, Mul),  //safe operations
-    2 -> List(Div, Mod), //these might make function undefined
-    3 -> List(LeftShift, ARightShift, URightShift) //... and these
-  )
+
   private val pairs: Iterator[(Operator, Operator)] = for {
-      comb <- opGroups.keys.toList.sorted.combinations(2)
-      a <- opGroups(comb(0))
-      b <- opGroups(comb(1))
-      if (a.prio != b.prio)
-    } yield(a,b)
+      comb <- Language.OperatorList.combinations(2)
+      a <- comb.headOption
+      b <- comb.tail.headOption
+      if (a.prio != b.prio && !(a.safe == true && b.safe == true))
+    } yield (a,b)
   
   val AllLanguages: Map[Int, (Operator, Operator)] = ListMap.empty ++ pairs
     .zipWithIndex

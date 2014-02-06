@@ -1,5 +1,26 @@
 package vipo.guess.domain
 
+import scala.util.parsing.combinator.JavaTokenParsers
+
+class FunctionParser extends JavaTokenParsers {
+  import vipo.guess.domain.Language.OperatorList
+  
+  def operator: Parser[Operator] = OperatorList.tail.foldRight(
+    OperatorList.head.view ^^ (_ => OperatorList.head))(
+    (el, acc) => acc | (el.view ^^ (_ => el)))
+
+}
+
+object Function extends FunctionParser {
+  
+  def parse(str: String): Either[String, Operator] = parseAll(operator, str) match {
+    case Success(d, _) => Right(d)
+    case Error(msg, _) => Left(msg)
+    case Failure(msg, _) => Left(msg)
+  }
+
+}
+
 class Function(val argName: String,
     val exp: Tuple5[Operand, Operator, Operand, Operator, Operand]) {
   
