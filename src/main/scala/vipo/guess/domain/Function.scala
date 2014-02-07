@@ -4,16 +4,29 @@ import scala.util.parsing.combinator.JavaTokenParsers
 
 class FunctionParser extends JavaTokenParsers {
   import vipo.guess.domain.Language.OperatorList
-  
+
   def operator: Parser[Operator] = OperatorList.tail.foldRight(
     OperatorList.head.view ^^ (_ => OperatorList.head))(
     (el, acc) => acc | (el.view ^^ (_ => el)))
+
+  def const: Parser[Constant] = """\d+""".r ^^ {case s => Constant(s.toInt)}
+  
+  def arg(Name: String): Parser[Operand] = ident ^? ({case Name => Argument()},
+    (a => s"unknown identifier ${a}, known one is ${Name}"))
+
+  def operand(argName: String): Parser[(String, Operand)] = (const | arg(argName)) ^^ {v => (argName, v)}
+
+  def formalArg: Parser[String] = "(" ~> ident <~ ":"  ~ "Int" ~ ")" ~ "=>"
+  
+  def exp: Parser[Function] = (formalArg into { arg => operand(arg) ~ operator ~ operand(arg) ~ operator ~ operand(arg) } ) ^^ {
+    case t1 ~ o2 ~ t3 ~ o4 ~ t5 => new Function(t1._1, (t1._2, o2, t3._2, o4, t5._2))
+  }
 
 }
 
 object Function extends FunctionParser {
   
-  def parse(str: String): Either[String, Operator] = parseAll(operator, str) match {
+  def parse(str: String): Either[String, Function] = parseAll(exp, str) match {
     case Success(d, _) => Right(d)
     case Error(msg, _) => Left(msg)
     case Failure(msg, _) => Left(msg)
