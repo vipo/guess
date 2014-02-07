@@ -22,5 +22,6 @@ libraryDependencies ++= Seq(
   "io.spray" % "spray-can" % sprayVersion,
   "io.spray" % "spray-routing" % sprayVersion,
   "ch.qos.logback" % "logback-classic" % "1.0.13",
-  "org.scalatest" %% "scalatest" % "2.0" % "test"
+  "org.scalatest" %% "scalatest" % "2.0" % "test",
+  "org.scalacheck" %% "scalacheck" % "1.11.3" % "test"
 )
