@@ -57,7 +57,13 @@ object Language {
 
   def randomFunction(no: Int): (Function, List[(Int, Int)]) = {
     def constVal() = ConstMinValue + random.nextInt(ConstMaxValue - ConstMinValue + 1)
-    val argName: Char = ('a' + random.nextInt('z' - 'a' + 1)).toChar
+    def genAscii(from: Char, to: Char) = (from + random.nextInt(to - from + 1)).toChar
+    def genChar: Char = genAscii('a', 'z')
+    def genNum: Char = genAscii('0', '9')
+    val argName: String =
+      ((1 to (1 + random.nextInt(3))).
+      	foldRight(List(genChar))((_, acc) =>
+      	  acc ++ List(if (random.nextBoolean) genChar else genNum))).mkString
     val ops =
       if (random.nextBoolean) AllLanguages(no)
       else AllLanguages(no).swap
@@ -67,7 +73,7 @@ object Language {
       else List(Constant(const1), Constant(const2), Argument())
     val confsPermutations = confs.permutations.toList
     val conf = confsPermutations(random.nextInt(confsPermutations.size))
-    val f = new Function(argName.toString, (conf(0), ops._1, conf(1), ops._2, conf(2)))
+    val f = new Function(argName, (conf(0), ops._1, conf(1), ops._2, conf(2)))
     val values = arguments.
       map(v => (v, f(v))).
       flatMap({
