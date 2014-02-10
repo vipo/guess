@@ -8,6 +8,7 @@ import akka.util.Timeout
 import scala.concurrent.duration._
 import com.typesafe.config.ConfigFactory
 import scala.collection.JavaConversions._
+import vipo.guess.actors.ChallengeActor
 
 object Bootstrap {
 
@@ -31,5 +32,7 @@ object Bootstrap {
   val Router = System.actorOf(Props[RouterActor], name = "router")
 
   val Stats = System.actorOf(Props[StatisticsActor], name = "stats")
+
+  val Challenges = System.actorOf(Props[ChallengeActor], name = "challenges")
 
 }

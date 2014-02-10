@@ -55,7 +55,7 @@ object Language {
     .zipWithIndex
     .map(t => (t._2 + 1, t._1))
 
-  def randomFunction(no: Int): (Function, List[(Int, Int)]) = {
+  def randomFunction(no: LangNo): (Function, List[(Int, Int)]) = {
     def constVal() = ConstMinValue + random.nextInt(ConstMaxValue - ConstMinValue + 1)
     def genAscii(from: Char, to: Char) = (from + random.nextInt(to - from + 1)).toChar
     def genChar: Char = genAscii('a', 'z')

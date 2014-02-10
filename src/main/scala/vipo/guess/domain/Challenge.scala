@@ -5,6 +5,5 @@ import vipo.guess.domain.Language._
 object Challenge {
 
   type ChallengeId = Int
-  type ChalengeId = (LangNo, ChallengeId)
   
 }

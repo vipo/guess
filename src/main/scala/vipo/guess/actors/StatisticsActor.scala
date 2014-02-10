@@ -9,9 +9,6 @@ import akka.persistence.SaveSnapshotFailure
 import akka.persistence.SaveSnapshotSuccess
 import vipo.guess.domain.Language._
 import vipo.guess.domain.Challenge._
-import vipo.guess.Bootstrap.{SnapshotDuration, SnapshotDurationInitial}
-import scala.concurrent.duration._
-import scala.concurrent.duration.Duration
 
 case class SampleGenerated(val langNo: LangNo)
 case class GetSampleGeneratedTimes(val langNo: LangNo)
@@ -26,38 +23,26 @@ case class SnapshotData(
   val sampleGenData: StatisticsActor.SampleGenData,
   val challengeData: StatisticsActor.ChallengeData) extends Serializable
 
-class StatisticsActor extends Processor with ActorLogging {
+class StatisticsActor extends PersistentActor[SnapshotData] with UnknownMessageReceiver {
   import StatisticsActor._
   
-  private val SnapMessage = "snap"
   private var langGenerated: SampleGenData = Map().withDefaultValue(0)
   private var challengesTried: ChallengeData = Map().withDefaultValue(0)
 
-  override def preStart() =
-    try super.preStart
-    finally scheduleSnapshot(SnapshotDurationInitial)
-
-  def receive = {
+  override def receive = super.receive orElse doReceive orElse receiveUnknown
+  
+  private def doReceive: PartialFunction[Any, Unit] = {
     case Persistent(SampleGenerated(no), _) => langGenerated =
       langGenerated + (no -> (langGenerated(no) + 1))
     case msg@SampleGenerated(_) => self forward Persistent(msg)
     case GetSampleGeneratedTimes(no) => sender ! langGenerated(no)
-    //persistence
-    case SnapshotOffer(metadata, SnapshotData(g, c)) =>
-      try {langGenerated = g; challengesTried = c}
-      finally log.info(s"Recovered from snapshot: $metadata")
-    case SnapMessage =>
-      saveSnapshot(SnapshotData(langGenerated, challengesTried))
-    case SaveSnapshotSuccess(metadata) =>
-      try scheduleSnapshot()
-      finally log.info(s"Snapshot saved $metadata")
-    case SaveSnapshotFailure(metadata, reason) =>
-      log.error(s"Snapshot $metadata failed: $reason")
-    case msg => log.error(s"received unknown message: $msg")
+  }
+  
+  override def loadData(data: SnapshotData): Unit = {
+    langGenerated = data.sampleGenData
+    challengesTried = data.challengeData
   }
 
-  private def scheduleSnapshot(d: FiniteDuration = SnapshotDuration) = {
-    import vipo.guess.Bootstrap._
-    System.scheduler.scheduleOnce(d, self, SnapMessage)
-  }
+  override def dataForSave: SnapshotData = SnapshotData(langGenerated, challengesTried)
+
 }
