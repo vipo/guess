@@ -4,17 +4,22 @@ import scala.xml._
 import akka.actor._
 import akka.pattern.ask
 import spray.routing._
-import vipo.guess.Bootstrap.{Tokens, Stats, ExecutionContext, DefaultTimeout}
+import vipo.guess.Bootstrap.{MasterKey, Tokens, Stats, Challenges,
+  ExecutionContext, DefaultTimeout}
 import vipo.guess.domain.Language._
 import vipo.guess.domain.Operator
 import scala.concurrent.Promise
 import scala.concurrent.Future
+import vipo.guess.domain.Challenge.ChallengeId
+import vipo.guess.domain.Function
+import sun.org.mozilla.javascript.ast.Yield
 
 object RouterActor {
   val Lang = "lang"
   val List = "list"
   val Gen = "gen"
   val Token = "token"
+  val Challenge = "challenge"
   val LangListPath = s"/${Lang}/${List}"
   val LangPath = s"/${Lang}"
   val LangNoPath = {no: LangNo => s"/${Lang}/${no}"}
@@ -31,10 +36,20 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       } ~
       pathPrefix(Lang) {
         pathPrefix(IntNumber) { no =>
-          path(Gen){
-            parameter(Token) { token =>
-              if (token == Tokens(no)) complete(generate(no))
-              else reject()
+          pathPrefix(Gen) {
+            path(Challenge) {
+              pathEnd {
+                parameter(Token) { token =>
+                  if (token == MasterKey) complete(generateChallenge(no))
+                  else reject()
+                }
+              }
+            } ~
+            pathEnd {
+              parameter(Token) { token =>
+                if (token == Tokens(no)) complete(generateSample(no))
+                else reject()
+              }
             }
           } ~
           pathEnd { ctx =>
@@ -65,12 +80,18 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       </body>
     </html>
           
-  def generate(no: LangNo): String = {
+  def generateSample(no: LangNo): String = {
     Stats ! SampleGenerated(no);
     val (f, values) = randomFunction(no)
     s"val f =\n  ${f}\n${values.map(t => s"f(${t._1}) == ${t._2}").mkString("\n")}"
   }
 
+  def generateChallenge(no: LangNo): String = {
+    val (f, _) = randomFunction(no)
+    Challenges ! GenerateChallenge(no)
+    s"${f}"
+  }
+  
   val list =
     <html>
       <body>
@@ -86,7 +107,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
     </html>
 
   def langNo(ctx: RequestContext, no: LangNo) = {
-    def reply(times: Long) = {
+    def reply(times: Long, challenges: List[SingleChallengeData]) = {
       val t = AllLanguages(no)
       <html>
         <body>
@@ -100,11 +121,21 @@ class RouterActor extends HttpServiceActor with ActorLogging {
             data to test your implementation with. Note, that you have to provide a token
             in the url. Data is generated on every request, so press F5 as often as you like.
             Page is machine semi-friendly, it was generated {times} times.
+          <h2>Challenges:</h2>
+          <ul>
+            {challenges.map(d =>
+              <li>ChallengeId: {d.challengeId}, solved: {d.solved}</li>
+            )}
+          </ul>
         </body>
       </html>
     }
-    (Stats ? GetSampleGeneratedTimes(no)).mapTo[Long].onSuccess {
-      case l: Long => ctx.complete(reply(l))
+    val fut = for {
+      samples <- (Stats ? GetSampleGeneratedTimes(no)).mapTo[Long]
+      challenges <- (Challenges ? GetChallengesForLanguage(no)).mapTo[List[SingleChallengeData]]
+    } yield(samples, challenges)
+    fut.onSuccess {
+      case (s, c) => ctx.complete(reply(s, c))
     }
   }
           
@@ -116,12 +147,12 @@ class RouterActor extends HttpServiceActor with ActorLogging {
         <h3>Requirements:</h3>
         <ul>
           <li>It is anonymous function with type "Int => Int"</li>
-          <li>Types are not defined</li>
           <li>It is written in on line</li>
           <li>Argument's values must be in range [{MinValue}; {MaxValue}]</li>
           <li>Function's result must be in range [Int.MinValue; Int.MaxValue]</li>
           <li>The only type it is aware of is Int</li>
           <li>All the low-level integer overflows work as they do it in Scala</li>
+          <li>Operator priorities are as in Scala</li>
           <li>Only 2 arithmetic operators (as in Scala) allowed on Ints are listed in your personal task,
             see {<a>this</a> % Attribute(None, "href", Text(LangListPath), Null)} for details</li>
           <li>Both of operators must be used</li>

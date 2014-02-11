@@ -33,9 +33,9 @@ object Function extends FunctionParser {
   }
 
 }
-
+@SerialVersionUID(42L)
 class Function(val argName: String,
-    val exp: Tuple5[Operand, Operator, Operand, Operator, Operand]) {
+    val exp: Tuple5[Operand, Operator, Operand, Operator, Operand]) extends Serializable {
   
   def apply(arg: Int): Option[Int] = {
     object SimpleExp {

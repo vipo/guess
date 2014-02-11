@@ -7,6 +7,7 @@ import vipo.guess.domain.Language._
 import vipo.guess.domain.Language
 
 case class SingleChallengeData(
+    challengeId: ChallengeId,
     langNo: LangNo,
     function: Function,
     solved: Boolean
@@ -26,20 +27,22 @@ class ChallengeActor extends PersistentActor[Map[ChallengeId, SingleChallengeDat
     case Persistent(GenerateChallenge(no), _) => {
       val size = challengesData.size
       val f: Function = Language.randomFunction(no)._1
-      challengesData = challengesData + ((size + 1) ->
-      	  SingleChallengeData(no, f, false)) 
+      val newId = size + 1
+      challengesData = challengesData + (newId ->
+      	  SingleChallengeData(newId, no, f, false))
     }
     case msg@GenerateChallenge(_) => self forward Persistent(msg)
     //
     case Persistent(MarkAsSolved(challengeId), _) => {
       val old = challengesData(challengeId)
       challengesData = challengesData + (challengeId ->
-      	  SingleChallengeData(old.langNo, old.function, true))
+      	  SingleChallengeData(old.challengeId, old.langNo, old.function, true))
     }
     case msg@MarkAsSolved(_) => self forward Persistent(msg)
     //
     case GetChallengesForLanguage(no) => {
-      val result: Seq[SingleChallengeData] = challengesData.map(_._2).filter(_.langNo == no).toSeq
+      val result: Seq[SingleChallengeData] = challengesData.map(_._2).
+        filter(_.langNo == no).toList.sortWith(_.challengeId < _.challengeId)
       sender ! result
     }
   }

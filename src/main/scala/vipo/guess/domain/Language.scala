@@ -4,7 +4,7 @@ import scala.collection.immutable.ListMap
 import scala.collection.immutable.Map
 import scala.util.Random
 
-sealed trait Token
+sealed trait Token extends Serializable
 
 abstract class Operand extends Token
 
