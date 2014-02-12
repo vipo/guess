@@ -32,8 +32,10 @@ class StatisticsActor extends PersistentActor[SnapshotData] with UnknownMessageR
   override def receive = super.receive orElse doReceive orElse receiveUnknown
   
   private def doReceive: PartialFunction[Any, Unit] = {
-    case Persistent(SampleGenerated(no), _) => langGenerated =
-      langGenerated + (no -> (langGenerated(no) + 1))
+    case Persistent(SampleGenerated(no), _) => {
+      val curr: Long = langGenerated(no)
+      langGenerated = langGenerated + (no -> (curr + 1))
+    }
     case msg@SampleGenerated(_) => self forward Persistent(msg)
     case GetSampleGeneratedTimes(no) => sender ! langGenerated(no)
   }

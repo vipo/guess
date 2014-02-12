@@ -81,15 +81,14 @@ class RouterActor extends HttpServiceActor with ActorLogging {
     </html>
           
   def generateSample(no: LangNo): String = {
-    Stats ! SampleGenerated(no);
+    Stats ! SampleGenerated(no)
     val (f, values) = randomFunction(no)
     s"val f =\n  ${f}\n${values.map(t => s"f(${t._1}) == ${t._2}").mkString("\n")}"
   }
 
   def generateChallenge(no: LangNo): String = {
-    val (f, _) = randomFunction(no)
     Challenges ! GenerateChallenge(no)
-    s"${f}"
+    "OK"
   }
   
   val list =
