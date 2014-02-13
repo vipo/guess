@@ -140,7 +140,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
   }
   
   def langSummary(ctx: RequestContext, no: LangNo): Unit = {
-    def reply(times: Long, challenges: List[SingleChallengeData]) = {
+    def reply(times: Long, challenges: List[(SingleChallengeData, Long)]) = {
       val t = AllLanguages(no)
       <html>
         <body>
@@ -157,7 +157,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
           <h2>Challenges:</h2>
           <ul>
             {challenges.map(d =>
-              <li>ChallengeId: {d.challengeId}, solved: {d.solved}</li>
+              <li>ChallengeId: {d._1.challengeId}, solved: {d._1.solved}, times queried: {d._2}</li>
             )}
           </ul>
         </body>
@@ -167,7 +167,14 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       samples <- (Stats ? GetSampleGeneratedTimes(no)).mapTo[Long]
       challenges <- (Challenges ? GetChallengesForLanguage(no)).mapTo[List[SingleChallengeData]]
     } yield(samples, challenges)).onSuccess {
-      case (s, c) => ctx.complete(reply(s, c))
+      case (samples, challenges) => {
+        Future.sequence(challenges.map(c =>
+          (Stats ? GetChallengeQueriedTimes(c.challengeId)).mapTo[Long])).onSuccess {
+          case longs: List[Long] => {
+            ctx.complete(reply(samples, challenges.zip(longs)))
+          }
+        }
+      }
     }
   }
           
