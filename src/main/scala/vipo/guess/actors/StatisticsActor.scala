@@ -12,6 +12,7 @@ import vipo.guess.domain.Challenge._
 
 case class SampleGenerated(val langNo: LangNo)
 case class GetSampleGeneratedTimes(val langNo: LangNo)
+case class ChallengeQueried(val challengeId: ChallengeId)
 
 object StatisticsActor {
   type SampleGenData = Map[LangNo, Long]
@@ -38,6 +39,12 @@ class StatisticsActor extends PersistentActor[SnapshotData] with UnknownMessageR
     }
     case msg@SampleGenerated(_) => self forward Persistent(msg)
     case GetSampleGeneratedTimes(no) => sender ! langGenerated(no)
+    //
+    case Persistent(ChallengeQueried(challengeId), _) => {
+      val curr: Long = challengesTried(challengeId)
+      challengesTried = challengesTried + (challengeId -> (curr + 1))
+    }
+    case msg@ChallengeQueried(_) => self forward Persistent(msg)
   }
   
   override def loadData(data: SnapshotData): Unit = {

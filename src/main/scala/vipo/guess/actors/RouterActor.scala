@@ -131,7 +131,10 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       val challenge = challenges.find(_.challengeId == challengeId)
       challenge.flatMap(c => c.function(funArg)) match {
         case None => ctx.reject()
-        case Some(v) => ctx.complete(v.toString)
+        case Some(v) => {
+          Stats ! ChallengeQueried(challengeId)
+          ctx.complete(v.toString)
+        }
       }
     }
   }
