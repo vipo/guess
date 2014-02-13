@@ -19,6 +19,7 @@ object RouterActor {
   val List = "list"
   val Gen = "gen"
   val Token = "token"
+  val Arg = "arg"
   val Challenge = "challenge"
   val LangListPath = s"/${Lang}/${List}"
   val LangPath = s"/${Lang}"
@@ -30,10 +31,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
   import RouterActor._
 
   def receive = runRoute {
-    get {
-      pathSingleSlash {
-        complete(index)
-      } ~
+    post {
       pathPrefix(Lang) {
         pathPrefix(IntNumber) { no =>
           pathPrefix(Gen) {
@@ -44,16 +42,39 @@ class RouterActor extends HttpServiceActor with ActorLogging {
                   else reject()
                 }
               }
-            } ~
+            }
+          }
+        }
+      }
+    } ~
+    get {
+      pathSingleSlash {
+        complete(index)
+      } ~
+      pathPrefix(Lang) {
+        pathPrefix(IntNumber) { langNo =>
+          pathPrefix(Gen) {
             pathEnd {
               parameter(Token) { token =>
-                if (token == Tokens(no)) complete(generateSample(no))
+                if (token == Tokens(langNo)) complete(generateSample(langNo))
                 else reject()
               }
             }
           } ~
+          pathPrefix(Challenge) {
+            pathPrefix(IntNumber) { challengeId =>
+              parameter(Arg) { funArg =>
+                parameter(Token) { token =>
+                  pathEnd { ctx =>
+                    if (token == Tokens(langNo)) challengeValue(ctx, langNo, challengeId, funArg.toInt)
+                    else ctx.reject()
+                  }
+                }
+              }
+            }
+          } ~
           pathEnd { ctx =>
-            langNo(ctx, no)
+            langSummary(ctx, langNo)
           }
         } ~
         path(List) {
@@ -105,7 +126,17 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       </body>
     </html>
 
-  def langNo(ctx: RequestContext, no: LangNo) = {
+  def challengeValue(ctx: RequestContext, langNo: LangNo, challengeId: ChallengeId, funArg: Int): Unit = {
+    ((Challenges ? GetChallengesForLanguage(langNo)).mapTo[List[SingleChallengeData]]).onSuccess { case challenges =>
+      val challenge = challenges.find(_.challengeId == challengeId)
+      challenge.flatMap(c => c.function(funArg)) match {
+        case None => ctx.reject()
+        case Some(v) => ctx.complete(v.toString)
+      }
+    }
+  }
+  
+  def langSummary(ctx: RequestContext, no: LangNo): Unit = {
     def reply(times: Long, challenges: List[SingleChallengeData]) = {
       val t = AllLanguages(no)
       <html>
@@ -129,11 +160,10 @@ class RouterActor extends HttpServiceActor with ActorLogging {
         </body>
       </html>
     }
-    val fut = for {
+    (for {
       samples <- (Stats ? GetSampleGeneratedTimes(no)).mapTo[Long]
       challenges <- (Challenges ? GetChallengesForLanguage(no)).mapTo[List[SingleChallengeData]]
-    } yield(samples, challenges)
-    fut.onSuccess {
+    } yield(samples, challenges)).onSuccess {
       case (s, c) => ctx.complete(reply(s, c))
     }
   }
