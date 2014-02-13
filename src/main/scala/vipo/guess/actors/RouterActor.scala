@@ -166,15 +166,9 @@ class RouterActor extends HttpServiceActor with ActorLogging {
     (for {
       samples <- (Stats ? GetSampleGeneratedTimes(no)).mapTo[Long]
       challenges <- (Challenges ? GetChallengesForLanguage(no)).mapTo[List[SingleChallengeData]]
-    } yield(samples, challenges)).onSuccess {
-      case (samples, challenges) => {
-        Future.sequence(challenges.map(c =>
-          (Stats ? GetChallengeQueriedTimes(c.challengeId)).mapTo[Long])).onSuccess {
-          case longs: List[Long] => {
-            ctx.complete(reply(samples, challenges.zip(longs)))
-          }
-        }
-      }
+      times <- Future.sequence(challenges.map(c => (Stats ? GetChallengeQueriedTimes(c.challengeId)).mapTo[Long]))
+    } yield(samples, challenges.zip(times))).onSuccess {
+        case (s, c) => ctx.complete(reply(s, c))
     }
   }
           
