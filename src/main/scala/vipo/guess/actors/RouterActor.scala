@@ -33,14 +33,27 @@ class RouterActor extends HttpServiceActor with ActorLogging {
   def receive = runRoute {
     post {
       pathPrefix(Lang) {
-        pathPrefix(IntNumber) { no =>
+        pathPrefix(IntNumber) { langNo =>
           pathPrefix(Gen) {
             path(Challenge) {
               pathEnd {
                 parameter(Token) { token =>
-                  if (token == MasterKey) complete(generateChallenge(no))
+                  if (token == MasterKey) complete(generateChallenge(langNo))
                   else reject()
                 }
+              }
+            }
+          } ~
+          pathPrefix(Challenge) {
+            pathPrefix(IntNumber) { challengeId =>
+              parameter(Token) { token =>
+                if (token == Tokens(langNo)) {
+                  entity(as[String]) { body =>
+                    pathEnd { ctx =>
+                      tryChallenge(ctx, langNo, challengeId, body)
+                    }
+                  }
+                } else reject()
               }
             }
           }
@@ -126,6 +139,10 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       </body>
     </html>
 
+  def tryChallenge(ctx: RequestContext, langNo: LangNo, challengeId: ChallengeId, funBody: String): Unit = {
+    ctx.complete("OK")
+  }
+  
   def challengeValue(ctx: RequestContext, langNo: LangNo, challengeId: ChallengeId, funArg: Int): Unit = {
     ((Challenges ? GetChallengesForLanguage(langNo)).mapTo[List[SingleChallengeData]]).onSuccess { case challenges =>
       val challenge = challenges.find(_.challengeId == challengeId)
