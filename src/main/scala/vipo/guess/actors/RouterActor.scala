@@ -150,13 +150,14 @@ class RouterActor extends HttpServiceActor with ActorLogging {
     withChallengeData(langNo, challengeId, (challenge: Option[SingleChallengeData]) =>
       challenge.map(c => (c.solved, functionsAreEqual(c.function, funBody))) match {
         case None => ctx.reject()
-        case Some((true, _)) => ctx.complete(StatusCode.int2StatusCode(410))
-        case Some((false, equal)) => {
+        case Some((true, _)) => ctx.complete(StatusCode.int2StatusCode(410), "Challenge already solved")
+        case Some((false, Left(msg))) => ctx.complete(StatusCode.int2StatusCode(400), msg)
+        case Some((false, Right(equal))) => {
           Stats ! ChallengeQueried(challengeId)
           if (equal) {
             Challenges ! MarkAsSolved(challengeId)
             ctx.complete("OK")
-          } else ctx.complete(StatusCode.int2StatusCode(400))
+          } else ctx.complete(StatusCode.int2StatusCode(400), "Bad guess!")
         }
       }
     )
