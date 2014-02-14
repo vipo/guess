@@ -12,7 +12,8 @@ import scala.concurrent.Promise
 import scala.concurrent.Future
 import vipo.guess.domain.Challenge.ChallengeId
 import vipo.guess.domain.Function
-import sun.org.mozilla.javascript.ast.Yield
+import spray.http.StatusCode
+import vipo.guess.domain.Challenge.functionsAreEqual
 
 object RouterActor {
   val Lang = "lang"
@@ -139,13 +140,29 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       </body>
     </html>
 
-  def tryChallenge(ctx: RequestContext, langNo: LangNo, challengeId: ChallengeId, funBody: String): Unit = {
-    ctx.complete("OK")
+  def withChallengeData(langNo: LangNo, challengeId: ChallengeId, f: (Option[SingleChallengeData]) => Unit): Unit = {
+    ((Challenges ? GetChallengesForLanguage(langNo)).mapTo[List[SingleChallengeData]]).onSuccess {
+      case challenges => f(challenges.find(_.challengeId == challengeId))
+    }
   }
   
-  def challengeValue(ctx: RequestContext, langNo: LangNo, challengeId: ChallengeId, funArg: Int): Unit = {
-    ((Challenges ? GetChallengesForLanguage(langNo)).mapTo[List[SingleChallengeData]]).onSuccess { case challenges =>
-      val challenge = challenges.find(_.challengeId == challengeId)
+  def tryChallenge(ctx: RequestContext, langNo: LangNo, challengeId: ChallengeId, funBody: String): Unit =
+    withChallengeData(langNo, challengeId, (challenge: Option[SingleChallengeData]) =>
+      challenge.map(c => (c.solved, functionsAreEqual(c.function, funBody))) match {
+        case None => ctx.reject()
+        case Some((true, _)) => ctx.complete(StatusCode.int2StatusCode(410))
+        case Some((false, equal)) => {
+          Stats ! ChallengeQueried(challengeId)
+          if (equal) {
+            Challenges ! MarkAsSolved(challengeId)
+            ctx.complete("OK")
+          } else ctx.complete(StatusCode.int2StatusCode(400))
+        }
+      }
+    )
+  
+  def challengeValue(ctx: RequestContext, langNo: LangNo, challengeId: ChallengeId, funArg: Int): Unit =
+    withChallengeData(langNo, challengeId, (challenge :Option[SingleChallengeData]) =>
       challenge.flatMap(c => c.function(funArg)) match {
         case None => ctx.reject()
         case Some(v) => {
@@ -153,8 +170,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
           ctx.complete(v.toString)
         }
       }
-    }
-  }
+    )
   
   def langSummary(ctx: RequestContext, no: LangNo): Unit = {
     def reply(times: Long, challenges: List[(SingleChallengeData, Long)]) = {
@@ -216,5 +232,5 @@ class RouterActor extends HttpServiceActor with ActorLogging {
         </ul>
       </body>
     </html>
-    
+
 }

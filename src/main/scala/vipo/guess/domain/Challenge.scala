@@ -6,4 +6,5 @@ object Challenge {
 
   type ChallengeId = Int
   
+  def functionsAreEqual(fun: Function, body: String): Boolean = false
 }
