@@ -40,7 +40,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
               pathEnd {
                 parameter(Token) { token =>
                   if (token == MasterKey) complete(generateChallenge(langNo))
-                  else reject()
+                  else badToken
                 }
               }
             }
@@ -54,7 +54,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
                       tryChallenge(ctx, langNo, challengeId, body)
                     }
                   }
-                } else reject()
+                } else badToken
               }
             }
           }
@@ -71,7 +71,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
             pathEnd {
               parameter(Token) { token =>
                 if (token == Tokens(langNo)) complete(generateSample(langNo))
-                else reject()
+                else badToken
               }
             }
           } ~
@@ -81,7 +81,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
                 parameter(Token) { token =>
                   pathEnd { ctx =>
                     if (token == Tokens(langNo)) challengeValue(ctx, langNo, challengeId, funArg.toInt)
-                    else ctx.reject()
+                    else badToken(ctx)
                   }
                 }
               }
@@ -101,7 +101,9 @@ class RouterActor extends HttpServiceActor with ActorLogging {
     }
   }
 
-  val index = 
+  def badToken(ctx: RequestContext): Unit = ctx.complete(StatusCode.int2StatusCode(403), "Bad token")
+  
+  val index =
     <html>
       <body>
         <h1>Say hello</h1>
