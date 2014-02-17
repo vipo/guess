@@ -170,15 +170,17 @@ class RouterActor extends HttpServiceActor with ActorLogging {
     )
   
   def challengeValue(ctx: RequestContext, langNo: LangNo, challengeId: ChallengeId, funArg: Int): Unit =
-    withChallengeData(langNo, challengeId, (challenge :Option[SingleChallengeData]) =>
-      challenge.flatMap(c => c.function(funArg)) match {
-        case None => ctx.reject()
-        case Some(v) => {
-          Stats ! ChallengeQueried(challengeId)
-          ctx.complete(v.toString)
+    withChallengeData(langNo, challengeId, (challenge: Option[SingleChallengeData]) => challenge match {
+      case None => ctx.reject()
+      case Some(challenge) => {
+        Stats ! ChallengeQueried(challengeId)
+        challenge.function(funArg) match {
+          case None => ctx.complete(StatusCode.int2StatusCode(400), "Function is undefined for this arg")
+          case Some(v) => ctx.complete(v.toString)
         }
       }
-    )
+    }
+  )
   
   def langSummary(ctx: RequestContext, no: LangNo): Unit = {
     def reply(times: Long, challenges: List[(SingleChallengeData, Long)]) = {
@@ -186,7 +188,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
       <html>
         <body>
           <h1>Language</h1>
-          <h2>Operators:</h2>
+          <h2>Operators</h2>
           <ul>
             <li>{Text(t._1.fullDescription)}</li>
             <li>{Text(t._2.fullDescription)}</li>
@@ -195,11 +197,60 @@ class RouterActor extends HttpServiceActor with ActorLogging {
             data to test your implementation with. Note, that you have to provide a token
             in the url. Data is generated on every request, so press F5 as often as you like.
             Page is machine semi-friendly, it was generated {times} times.
-          <h2>Challenges:</h2>
+          <h2>Challenges</h2>
           <ul>
             {challenges.map(d =>
-              <li>ChallengeId: {d._1.challengeId}, solved: {d._1.solved}, times queried: {d._2}</li>
+              <li>ChallengeId: {d._1.challengeId}, {if (d._1.solved) s"${d._1.function}" else "not solved"}, times queried: {d._2}</li>
             )}
+          </ul>
+          <h3>Interface:</h3>
+          <ul>
+            <li>GET  /lang/$LANG/challenge/$CHALLENGE_ID?token=$TOKEN&amp;arg=$ARG &mdash; gets a value of
+            challenge CHALLENGE_ID for language LANG for argument ARG. Curl command line example:
+            <pre>curl -i "http://localhost:8888/lang/1/challenge/1?token=1&amp;arg=10"</pre>
+            possible responses:<pre>
+HTTP/1.1 200 OK
+Server: spray-can/1.3-M2
+Date: Mon, 17 Feb 2014 19:38:20 GMT
+Content-Type: text/plain; charset=UTF-8
+Content-Length: 1
+
+6</pre> or, (if function is not defined for the argument)<pre>
+HTTP/1.1 400 Bad Request
+Server: spray-can/1.3-M2
+Date: Mon, 17 Feb 2014 20:19:45 GMT
+Content-Type: text/plain; charset=UTF-8
+Content-Length: 34
+
+Function is undefined for this arg
+</pre></li>
+            <li>POST /lang/$LANG/challenge/$CHALLENGE_ID?token=$TOKEN with function in request body  &mdash;
+            tries to guess a function. Curl command line example:
+            <pre>curl -i -X POST -d "(y: Int) => y + 6 / y" "http://localhost:8888/lang/1/challenge/24?token=1"</pre>
+            possible responses: <pre>
+HTTP/1.1 400 Bad Request
+Server: spray-can/1.3-M2
+Date: Mon, 17 Feb 2014 19:41:44 GMT
+Content-Type: text/plain; charset=UTF-8
+Content-Length: 10
+
+Bad guess!</pre> or (if you solved a challenge)<pre>
+HTTP/1.1 200 OK
+Server: spray-can/1.3-M2
+Date: Mon, 17 Feb 2014 18:56:13 GMT
+Content-Type: text/plain; charset=UTF-8
+Content-Length: 2
+
+OK%
+</pre>, or (if you try to solve a solved challenge)<pre>
+HTTP/1.1 410 Gone
+Server: spray-can/1.3-M2
+Date: Mon, 17 Feb 2014 19:39:26 GMT
+Content-Type: text/plain; charset=UTF-8
+Content-Length: 24
+
+Challenge already solved
+</pre></li>
           </ul>
         </body>
       </html>

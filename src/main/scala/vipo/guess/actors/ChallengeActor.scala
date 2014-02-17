@@ -28,6 +28,7 @@ class ChallengeActor extends PersistentActor[Map[ChallengeId, SingleChallengeDat
       val f: Function = Language.randomFunction(no)
       val newId = challengesData.size + 1
       challengesData = challengesData + (newId -> SingleChallengeData(newId, no, f, false))
+      log.info("Challenge {} generated for lang {}: {}", newId, no, f)
     }
     case msg@GenerateChallenge(_) => self forward Persistent(msg)
     //
