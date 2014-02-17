@@ -25,7 +25,7 @@ class ChallengeActor extends PersistentActor[Map[ChallengeId, SingleChallengeDat
   
   private def doReceive: PartialFunction[Any, Unit] = {
     case Persistent(GenerateChallenge(no), _) => {
-      val f: Function = Language.randomFunction(no)._1
+      val f: Function = Language.randomFunction(no)
       val newId = challengesData.size + 1
       challengesData = challengesData + (newId -> SingleChallengeData(newId, no, f, false))
     }

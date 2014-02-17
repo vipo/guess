@@ -13,7 +13,7 @@ import scala.concurrent.Future
 import vipo.guess.domain.Challenge.ChallengeId
 import vipo.guess.domain.Function
 import spray.http.StatusCode
-import vipo.guess.domain.Challenge.functionsAreEqual
+import vipo.guess.domain.Challenge.checkGuess
 
 object RouterActor {
   val Lang = "lang"
@@ -119,8 +119,13 @@ class RouterActor extends HttpServiceActor with ActorLogging {
           
   def generateSample(no: LangNo): String = {
     Stats ! SampleGenerated(no)
-    val (f, values) = randomFunction(no)
-    s"val f =\n  ${f}\n${values.map(t => s"f(${t._1}) == ${t._2}").mkString("\n")}"
+    val f = randomFunction(no)
+    val allVals: List[(Int, Option[Int])] = valuesForFunction(f)
+    val validVals: List[(Int, Int)] = allVals.flatMap(t => t._2 match {
+      case Some(v) => (t._1, v) :: Nil
+      case None => Nil
+    })
+    s"val f =\n  ${f}\n${validVals.map(t => s"f(${t._1}) == ${t._2}").mkString("\n")}"
   }
 
   def generateChallenge(no: LangNo): String = {
@@ -150,7 +155,7 @@ class RouterActor extends HttpServiceActor with ActorLogging {
   
   def tryChallenge(ctx: RequestContext, langNo: LangNo, challengeId: ChallengeId, funBody: String): Unit =
     withChallengeData(langNo, challengeId, (challenge: Option[SingleChallengeData]) =>
-      challenge.map(c => (c.solved, functionsAreEqual(c.function, funBody))) match {
+      challenge.map(c => (c.solved, checkGuess(funBody, c.function))) match {
         case None => ctx.reject()
         case Some((true, _)) => ctx.complete(StatusCode.int2StatusCode(410), "Challenge already solved")
         case Some((false, Left(msg))) => ctx.complete(StatusCode.int2StatusCode(400), msg)

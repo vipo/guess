@@ -6,9 +6,13 @@ object Challenge {
 
   type ChallengeId = Int
   
-  def functionsAreEqual(fun: Function, body: String): Either[String, Boolean] = Function.parse(body) match {
+  def checkGuess(chall: String, fun: Function): Either[String, Boolean] = Function.parse(chall) match {
     case Left(msg) => Left(msg)
-    case Right(f) => Right(false)
+    case Right(f) => {
+      val funResults = valuesForFunction(fun)
+      val challengeResults = valuesForFunction(f)
+      Right(funResults == challengeResults)
+    }
   }
 
 }

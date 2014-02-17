@@ -37,11 +37,11 @@ object Language {
   val MaxValue: Int = 100
   val ConstMinValue: Int = 1
   val ConstMaxValue: Int = 10
-  
+  val Arguments = (MinValue to MaxValue).toList
+
   val OperatorList: List[Operator] = Plus :: Minus :: Mul :: Div :: Mod ::
 	  	LeftShift :: ARightShift :: URightShift :: Nil
-  
-  private val arguments = (MinValue to MaxValue).toList
+
   private val random = new Random(System.currentTimeMillis)
 
   private val pairs: Iterator[(Operator, Operator)] = for {
@@ -55,7 +55,7 @@ object Language {
     .zipWithIndex
     .map(t => (t._2 + 1, t._1))
 
-  def randomFunction(no: LangNo): (Function, List[(Int, Int)]) = {
+  def randomFunction(no: LangNo): Function = {
     def constVal() = ConstMinValue + random.nextInt(ConstMaxValue - ConstMinValue + 1)
     def genAscii(from: Char, to: Char) = (from + random.nextInt(to - from + 1)).toChar
     def genChar: Char = genAscii('a', 'z')
@@ -73,14 +73,10 @@ object Language {
       else List(Constant(const1), Constant(const2), Argument())
     val confsPermutations = confs.permutations.toList
     val conf = confsPermutations(random.nextInt(confsPermutations.size))
-    val f = new Function(argName, (conf(0), ops._1, conf(1), ops._2, conf(2)))
-    val values = arguments.
-      map(v => (v, f(v))).
-      flatMap({
-        case (a, Some(v)) => List((a, v))
-        case _ => List()
-      }).toList
-    (f, values)
+    new Function(argName, (conf(0), ops._1, conf(1), ops._2, conf(2)))
   }
+
+  def valuesForFunction(f: Function): List[(Int, Option[Int])] =
+    Arguments.map(v => (v, f(v)))
 
 }
