@@ -9,6 +9,8 @@ import akka.persistence.SaveSnapshotFailure
 import akka.persistence.SaveSnapshotSuccess
 import vipo.guess.domain.Language._
 import vipo.guess.domain.Challenge._
+import vipo.guess.actors.support.UnknownMessageReceiver
+import vipo.guess.actors.support.PersistentActor
 
 case class SampleGenerated(val langNo: LangNo)
 case class GetSampleGeneratedTimes(val langNo: LangNo)

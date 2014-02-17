@@ -1,6 +1,4 @@
-package vipo.guess.actors
-
-import akka.event.LoggingAdapter
+package vipo.guess.actors.support
 import akka.actor.ActorLogging
 
 trait UnknownMessageReceiver {

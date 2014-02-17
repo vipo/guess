@@ -1,15 +1,13 @@
-package vipo.guess.actors
+package vipo.guess.actors.support
 
 import akka.persistence.Processor
-import vipo.guess.Bootstrap.{SnapshotDuration, SnapshotDurationInitial}
 import scala.concurrent.duration._
-import scala.concurrent.duration.Duration
 import akka.actor.ActorLogging
 import akka.persistence.SaveSnapshotFailure
 import akka.persistence.SaveSnapshotSuccess
 import akka.persistence.SnapshotOffer
 
-abstract class PersistentActor[T] extends Processor with ActorLogging {
+abstract class PersistentActor[T] extends Processor with ActorLogging with ActorSystemSettings {
 
   protected val SnapMessage = "snap"
     
@@ -33,9 +31,8 @@ abstract class PersistentActor[T] extends Processor with ActorLogging {
   def loadData(data:T): Unit;
   def dataForSave(): T;
 
-  private def scheduleSnapshot(d: FiniteDuration = SnapshotDuration) = {
-    import vipo.guess.Bootstrap._
-    System.scheduler.scheduleOnce(d, self, SnapMessage)
-  }
+  private def scheduleSnapshot(d: FiniteDuration = SnapshotDuration) =
+    if (SnapshotsEnabled)
+      context.system.scheduler.scheduleOnce(d, self, SnapMessage)
 
 }

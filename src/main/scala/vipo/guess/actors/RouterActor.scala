@@ -4,8 +4,7 @@ import scala.xml._
 import akka.actor._
 import akka.pattern.ask
 import spray.routing._
-import vipo.guess.Bootstrap.{MasterKey, Tokens, Stats, Challenges,
-  ExecutionContext, DefaultTimeout}
+import vipo.guess.Bootstrap.{Stats, Challenges}
 import vipo.guess.domain.Language._
 import vipo.guess.domain.Operator
 import scala.concurrent.Promise
@@ -14,6 +13,7 @@ import vipo.guess.domain.Challenge.ChallengeId
 import vipo.guess.domain.Function
 import spray.http.StatusCode
 import vipo.guess.domain.Challenge.checkGuess
+import vipo.guess.actors.support.ActorSystemSettings
 
 object RouterActor {
   val Lang = "lang"
@@ -28,7 +28,7 @@ object RouterActor {
   val LangNoGenPath = {no: LangNo => s"${LangNoPath(no)}/${Gen}?${Token}=replace_me_with_your_token"}
 }
 
-class RouterActor extends HttpServiceActor with ActorLogging {
+class RouterActor extends HttpServiceActor with ActorLogging with ActorSystemSettings {
   import RouterActor._
 
   def receive = runRoute {

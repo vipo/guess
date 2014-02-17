@@ -10,6 +10,8 @@ val sprayVersion = "1.3-M2"
 
 mainClass := Some("vipo.guess.Main")
 
+fork := true
+
 resolvers ++= Seq(
   "Typesafe repo" at "http://repo.typesafe.com/typesafe/releases/",
   "Spray repo" at "http://repo.spray.io"
@@ -19,6 +21,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
   "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
   "com.typesafe.akka" %% "akka-persistence-experimental" % akkaVersion,
+  "com.typesafe.akka" %% "akka-testkit" % akkaVersion % "test",
   "io.spray" % "spray-can" % sprayVersion,
   "io.spray" % "spray-routing" % sprayVersion,
   "ch.qos.logback" % "logback-classic" % "1.0.13",

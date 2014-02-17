@@ -5,6 +5,8 @@ import vipo.guess.domain.Challenge._
 import vipo.guess.domain.Function
 import vipo.guess.domain.Language._
 import vipo.guess.domain.Language
+import vipo.guess.actors.support.UnknownMessageReceiver
+import vipo.guess.actors.support.PersistentActor
 
 case class SingleChallengeData(
     challengeId: ChallengeId,
