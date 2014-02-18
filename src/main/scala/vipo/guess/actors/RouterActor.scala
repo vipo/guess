@@ -195,8 +195,8 @@ class RouterActor extends HttpServiceActor with ActorLogging with ActorSystemSet
           <h1>Language</h1>
           <h2>Operators</h2>
           <ul>
-            <li>{Text(t._1.fullDescription)}</li>
-            <li>{Text(t._2.fullDescription)}</li>
+            <li>{t._1.fullDescription}</li>
+            <li>{t._2.fullDescription}</li>
           </ul>
           {<a>Here</a> % Attribute(None, "href", Text(LangNoGenPath(no)), Null)} you can find sample
             data to test your implementation with. Note, that you have to provide a token
