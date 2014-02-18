@@ -24,5 +24,6 @@ trait ActorSystemSettings {
   lazy val Tokens: Map[Int, String] = GuessConfig.getStringList("tokens").zipWithIndex.
   		map({case (k, i) => (i+1, k)}).toMap
 
-  lazy val SnapshotsEnabled = GuessConfig.getString("snapshots") == "on"
+  lazy val SnapshotsDisabled = GuessConfig.getString("snapshots") == "off"
+
 }

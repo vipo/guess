@@ -32,7 +32,7 @@ abstract class PersistentActor[T] extends Processor with ActorLogging with Actor
   def dataForSave(): T;
 
   private def scheduleSnapshot(d: FiniteDuration = SnapshotDuration) =
-    if (SnapshotsEnabled)
+    if (!SnapshotsDisabled)
       context.system.scheduler.scheduleOnce(d, self, SnapMessage)
 
 }
