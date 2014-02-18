@@ -35,8 +35,10 @@ class ChallengeActor extends PersistentActor[Map[ChallengeId, SingleChallengeDat
     case msg@GenerateChallenge(_) => self forward Persistent(msg)
     //
     case Persistent(MarkAsSolved(challengeId), _) => {
-      val old = challengesData(challengeId)
-      challengesData = challengesData + (challengeId -> old.copy(solved = true))
+      challengesData.get(challengeId) match {
+        case None => log.info("Trying to mark non-existent challengeId {}", challengeId)
+        case Some(old) => challengesData = challengesData + (challengeId -> old.copy(solved = true))
+      }
     }
     case msg@MarkAsSolved(_) => self forward Persistent(msg)
     //
