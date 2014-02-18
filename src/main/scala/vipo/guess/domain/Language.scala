@@ -79,4 +79,5 @@ object Language {
   def valuesForFunction(f: Function): List[(Int, Option[Int])] =
     Arguments.map(v => (v, f(v)))
 
+  def argIsValid(arg: Int): Boolean = arg <= MaxValue && arg >= MinValue
 }

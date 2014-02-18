@@ -168,14 +168,18 @@ class RouterActor extends HttpServiceActor with ActorLogging with ActorSystemSet
         }
       }
     )
-  
+
+  def funUndefined(ctx: RequestContext): Unit =
+    ctx.complete(StatusCode.int2StatusCode(400), "Function is undefined for this arg")
+
   def challengeValue(ctx: RequestContext, langNo: LangNo, challengeId: ChallengeId, funArg: Int): Unit =
-    withChallengeData(langNo, challengeId, (challenge: Option[SingleChallengeData]) => challenge match {
+    if (!argIsValid(funArg)) funUndefined(ctx)
+    else withChallengeData(langNo, challengeId, (challenge: Option[SingleChallengeData]) => challenge match {
       case None => ctx.reject()
       case Some(challenge) => {
         Stats ! ChallengeQueried(challengeId)
         challenge.function(funArg) match {
-          case None => ctx.complete(StatusCode.int2StatusCode(400), "Function is undefined for this arg")
+          case None => funUndefined(ctx)
           case Some(v) => ctx.complete(v.toString)
         }
       }
@@ -183,6 +187,7 @@ class RouterActor extends HttpServiceActor with ActorLogging with ActorSystemSet
   )
   
   def langSummary(ctx: RequestContext, no: LangNo): Unit = {
+    val Host = "http://guess.homedir.eu"
     def reply(times: Long, challenges: List[(SingleChallengeData, Long)]) = {
       val t = AllLanguages(no)
       <html>
@@ -207,7 +212,7 @@ class RouterActor extends HttpServiceActor with ActorLogging with ActorSystemSet
           <ul>
             <li>GET  /lang/$LANG/challenge/$CHALLENGE_ID?token=$TOKEN&amp;arg=$ARG &mdash; gets a value of
             challenge CHALLENGE_ID for language LANG for argument ARG. Curl command line example:
-            <pre>curl -i "http://localhost:8888/lang/1/challenge/1?token=1&amp;arg=10"</pre>
+            <pre>curl -i "{Host}/lang/1/challenge/1?token=1&amp;arg=10"</pre>
             possible responses:<pre>
 HTTP/1.1 200 OK
 Server: spray-can/1.3-M2
@@ -226,7 +231,7 @@ Function is undefined for this arg
 </pre></li>
             <li>POST /lang/$LANG/challenge/$CHALLENGE_ID?token=$TOKEN with function in request body  &mdash;
             tries to guess a function. Curl command line example:
-            <pre>curl -i -X POST -d "(y: Int) => y + 6 / y" "http://localhost:8888/lang/1/challenge/24?token=1"</pre>
+            <pre>curl -i -X POST -d "(y: Int) => y + 6 / y" "{Host}/lang/1/challenge/24?token=1"</pre>
             possible responses: <pre>
 HTTP/1.1 400 Bad Request
 Server: spray-can/1.3-M2
