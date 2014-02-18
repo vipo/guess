@@ -77,10 +77,10 @@ class RouterActor extends HttpServiceActor with ActorLogging with ActorSystemSet
           } ~
           pathPrefix(Challenge) {
             pathPrefix(IntNumber) { challengeId =>
-              parameter(Arg) { funArg =>
+              parameter(Arg.as[Int]) { funArg =>
                 parameter(Token) { token =>
                   pathEnd { ctx =>
-                    if (token == Tokens(langNo)) challengeValue(ctx, langNo, challengeId, funArg.toInt)
+                    if (token == Tokens(langNo)) challengeValue(ctx, langNo, challengeId, funArg)
                     else badToken(ctx)
                   }
                 }
