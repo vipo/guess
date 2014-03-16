@@ -4,13 +4,17 @@ version := "0.1"
 
 scalaVersion := "2.10.2"
 
-val akkaVersion = "2.3-M2"
+val akkaVersion = "2.3.0"
 
-val sprayVersion = "1.3-M2"
+val sprayVersion = "1.3.0"
 
 mainClass := Some("vipo.guess.Main")
 
 fork := true
+
+fork in run := true
+
+javaOptions in run += "-Dconfig.file=./guess.conf"
 
 resolvers ++= Seq(
   "Typesafe repo" at "http://repo.typesafe.com/typesafe/releases/",
